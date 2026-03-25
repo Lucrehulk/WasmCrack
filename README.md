@@ -3,7 +3,7 @@ A toolsuite of advanced WASM binary analysis tools designed to reverse engineer 
 
 > **Important Note:** WasmCrack is currently a work in progress. Several planned features are still in development.
 
-**WasmCrack** is an advanced WebAssembly binary analysis toolkit designed specifically for reverse engineers. The ultimate vision for WasmCrack is to serve as a comprehensive suite of utilities to help security researchers and reverse engineers analyze, modify, and crack WebAssembly clients—particularly those used in complex browser-based web games.
+**WasmCrack** is an advanced WebAssembly binary analysis toolkit designed specifically for reverse engineers. The ultimate vision for WasmCrack is to serve as a suite of utilities to help reverse engineers analyze, modify, and crack WebAssembly clients—particularly those used in complex browser-based web games.
 
 ---
 
