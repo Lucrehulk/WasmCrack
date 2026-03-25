@@ -1,13 +1,13 @@
 # WasmCrack
 A toolsuite of advanced WASM binary analysis tools designed to reverse engineer WebAssembly binaries.
 
-> **⚠️ Important Note:** WasmCrack is currently a work in progress. Several planned features are still in development.
+> **Important Note:** WasmCrack is currently a work in progress. Several planned features are still in development.
 
 **WasmCrack** is an advanced WebAssembly binary analysis toolkit designed specifically for reverse engineers. The ultimate vision for WasmCrack is to serve as a comprehensive suite of utilities to help security researchers and reverse engineers analyze, modify, and crack WebAssembly clients—particularly those used in complex browser-based web games.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 WasmCrack organizes your reverse engineering targets into **Projects**. 
 
@@ -32,7 +32,7 @@ cargo run test
 
 ---
 
-## 🛠️ Current Features
+## Current Features
 
 WasmCrack currently supports the following automated analysis utilities:
 
@@ -51,7 +51,7 @@ WasmCrack currently supports the following automated analysis utilities:
 * **`struct-solver`**: Statically analyzes the Code Section and locates instances of memory store instructions. However, instead of just outputting the data like `store-ops-data does`, it will attempt to identify structs by identifying stores made at multiple different offsets consecutively. Note that this can also identify structures like arrays/vectors too if it's all the same type. Data is dumped to `potential-structs.txt` in your project directory.
 ---
 
-## 🚧 Planned Features (Roadmap)
+## Planned Features (Roadmap)
 
 The following utilities are planned for future releases to expand WasmCrack into a full dynamic and static analysis suite:
 
