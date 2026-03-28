@@ -23,7 +23,7 @@ impl SectionsParser {
         // Read the version bytes header. 
         let version = reader.read_bytes(4).expect("Failed to read WASM version");
         if version != [0x01, 0x00, 0x00, 0x00] {
-            eprintln!("WasmCrack expects version 1, but got {:?}. Instructions and features from later versions are not currently supported.", version);
+            eprintln!("WasmCrack expects version 1.0, but got {:?}. Instructions and features from later versions are not currently supported.", version);
         }
 
         // Each section gives its ID and byte size at the beginning of it, so we can easily read each section.

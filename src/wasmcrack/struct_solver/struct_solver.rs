@@ -53,11 +53,11 @@ impl StructSolver {
                                 func_output.push_str(&format!("{}, ", value));
                             }
                             func_output.push_str(&format!("{}", last_item.1));
-                            func_output.push_str(&format!("] (offset: {}) (data-type: {})\n\n", offset, data_type));
+                            func_output.push_str(&format!("] // (offset: {}) (data-type: {})\n\n", offset, data_type));
                         } else {     
                             func_output.push_str(&format!("PotentialStruct (at {}): {{\n", addr));
                             for (i, (offset, value, data_type)) in streak.iter().enumerate() {
-                                func_output.push_str(&format!("    v{}: ({}) ({}) // offset {}\n", i, value, data_type, offset));
+                                func_output.push_str(&format!("    v{}_{}: {} // offset {}\n", i, data_type, value, offset));
                             }
                             func_output.push_str("}\n\n");
                         }

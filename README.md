@@ -51,16 +51,17 @@ WasmCrack currently supports the following automated analysis utilities:
 * **`struct-solver`**: Statically analyzes the Code Section and locates instances of memory store instructions. However, instead of just outputting the data like `store-ops-data does`, it will attempt to identify structs by identifying stores made at multiple different offsets consecutively. Note that this can also identify structures like arrays/vectors too if it's all the same type. Data is dumped to `potential-structs.txt` in your project directory.
 ---
 
-## Planned Features (Roadmap)
+## Planned Features (roadmap)
 
 The following utilities are planned for future releases to expand WasmCrack into a full dynamic and static analysis suite:
 
-### Currently in Development
+### Features Guaranteed for Implementation (in the near future)
 
-* **`entropy-analyzer`**: Statically analyzes any data section blocks in windows to detect regions of high entropy. High entropy regions typically indicate cryptography.
+* **`entropy-analyzer`**: Statically analyzes any data section blocks in windows to detect regions of high entropy. It will apply general statistical analysis formulas for detecting entropy (e.g. Shannon Entropy) in order to do so. High entropy regions may indicate a cryptographic block.
 
-### Proposed Additions
 * **`func-hook`**: Dynamic instrumentation. Generates a modified version of the target WebAssembly binary, injecting a custom import call into *every* function. This hook will capture and export caller info, parameter values, and global states at runtime.
+
+### Proposed Additions (will likely be implemented if I find the time to)
 
 * **`local-trace`**: Pinpoint tracing. Specify a Wasm function and a specific local variable, and WasmCrack will map exactly how that local is mutated throughout the function's execution.
   

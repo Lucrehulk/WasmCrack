@@ -33,8 +33,8 @@ impl WasmEvaluator {
         if let Some(wasm_section) = self.sections.iter().find(|section| section.id == section_id) {
             if section_id == 11 {
                 // Analyze raw byte data for data sections.
-                let raw_analysis = self.evaluator.analyze_byte_slice(&wasm_section.data);
-                final_output.push_str(&raw_analysis);
+                let data_analysis = self.evaluator.analyze_data_bytes(&wasm_section.data);
+                final_output.push_str(&data_analysis);
             } else if section_id == 10 {
                 // Analyze all constants detected by our Converter if we are analyzing the code section.
                 let decoded_analysis = self.evaluator.analyze_decoded_constants(

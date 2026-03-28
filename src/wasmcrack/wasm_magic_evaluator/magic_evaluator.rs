@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use super::super::super::constants::signatures::KNOWN_SIGNATURES;
+use super::super::super::constants::opcodes::*;
 use super::super::super::binary_parsing::wasm_manager::WasmManager;
 
 pub struct MagicEvaluator;
@@ -9,14 +10,14 @@ impl MagicEvaluator {
         Self {}
     }
 
-    // Analyze raw byte slice
-    pub fn analyze_byte_slice(&self, target_bytes: &[u8]) -> String {
+    // Analyze data section bytes
+    pub fn analyze_data_bytes(&self, target_bytes: &[u8]) -> String {
         let mut evaluation_report = "".to_string();
 
         // Parse data blocks in a separate function so we can use them for both signatures and strings
         let data_blocks = self.parse_data_blocks(target_bytes);
 
-        // Check signatures 
+        // Check against our crypto signatures.
         let found_signatures = self.scan_for_data_block_signatures(&data_blocks);
         if !found_signatures.is_empty() {
             evaluation_report.push_str("Found crypto signatures in data blocks:\n");
@@ -369,29 +370,47 @@ impl MagicEvaluator {
             // Parse Segment Header
             // 0 = active, 1 = passive, 2 = active with memory index. 
             // Active segments (0, 2) have instructions, which we'll need to skip.
-            let bit_flags = target_bytes[ptr];
-            ptr += 1;
+            let (bit_flags, flag_bytes) = self.decode_leb128(&target_bytes[ptr..]);
+            ptr += flag_bytes;
 
             // If active, skip the instructions (usually i32.const offset) and the "end" opcode.
             if bit_flags == 0 || bit_flags == 2 {
                 if bit_flags == 2 { 
-                    // Decode and skip the memory index
+                    // Decode and skip the memory index.
                     let (_, skip_bytes) = self.decode_leb128(&target_bytes[ptr..]);
                     ptr += skip_bytes; 
                 }
-                // Skip until the "end" opcode (0x0B) of the offset expression.
-                while ptr < target_bytes.len() && target_bytes[ptr] != 0x0B {
+                // Skip until we locate the end.
+                loop {
+                    if ptr >= target_bytes.len() { break };
+                    let opcode = target_bytes[ptr];
                     ptr += 1;
+
+                    match opcode {
+                        // Only break at the "END" instruction.
+                        END => break, 
+                        // Otherwise skip forward by the necessary arguments count.
+                        I32_CONST | I64_CONST | GLOBAL_GET | REF_FUNC => { 
+                            let (_, skip_bytes) = self.decode_leb128(&target_bytes[ptr..]);
+                            ptr += skip_bytes;
+                        },
+                        F32_CONST => ptr += 4, 
+                        F64_CONST => ptr += 8, 
+                        REF_NULL => ptr += 1,
+                        _ => {
+                            panic!("Unhandled opcode: {:#04x}.", opcode);
+                        }
+                    }
                 }
-                ptr += 1; // Skip the 0x0B "end"
             }
 
             if ptr >= target_bytes.len() { break };
 
-            // Decode the size of the remaining actual data payload, and skip forward
+            // Decode the size of the remaining actual data payload, and skip forward.
             let (data_len, size_bytes) = self.decode_leb128(&target_bytes[ptr..]);
             ptr += size_bytes;
 
+            // Extract the remaining payload.
             if let Some(data_payload) = target_bytes.get(ptr..ptr + data_len) {
                 parsed_blocks.push((segment_index, data_payload.to_vec()));
             }

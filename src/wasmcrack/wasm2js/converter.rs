@@ -1629,7 +1629,7 @@ impl Converter {
                         }
                     }
                     _ => {
-                        panic!("Unhandled opcode: {:#04x} at byte offset {:#x}.", opcode, reader.addr - 1);
+                        panic!("Unhandled opcode: {:#04x}.", opcode);
                     }
                 }
             }
