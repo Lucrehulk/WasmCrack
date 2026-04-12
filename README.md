@@ -1,5 +1,5 @@
 # WasmCrack
-A toolsuite of advanced WASM binary analysis tools designed to reverse engineer WebAssembly binaries.
+A toolsuite of advanced WASM static binary analysis tools designed to reverse engineer WebAssembly binaries.
 
 > **Important Note:** WasmCrack is currently a work in progress. Several planned features are still in development.
 
