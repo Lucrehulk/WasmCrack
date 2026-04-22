@@ -49,6 +49,8 @@ WasmCrack currently supports the following automated analysis utilities:
 * **`store-ops-data`**: Analyzes the Code Section and locates any instances of memory store instructions made in funcs. It'll output data on the address, value, and type of store made. In addition, it will also provide data if the store instruction is an expression directly containing an XOR operation (note that, at the moment, if the expression is referred to rather than being inlined, it will not recognize the use of the XOR even if logically the referrer evaluates to an expression with one). Data is dumped to `store-ops-data.txt` in your project directory.
 
 * **`struct-solver`**: Analyzes the Code Section and locates instances of memory store instructions. However, instead of just outputting the data like `store-ops-data does`, it will attempt to identify structs by identifying stores made at multiple different offsets consecutively. Note that this can also identify structures like arrays/vectors too if it's all the same type. Data is dumped to `potential-structs.txt` in your project directory.
+
+* **`xor-stores`**: Analyzes the Code Section and locates any instances of *direct* xor memory stores. This means that only memory stores that come immediately after an xor instruction are dumped. It is essentially a more powerful and direct analysis of XOR in memory stores compared to the feature store-ops-data has for XOR detection, which is a bit looser. A check for a direct xor store is often a key telltale sign of where encryption/decryption occurs, as many algorithms end with a xor encryption cipher. Data is dumped to `xor-stores.txt` in your project directory.
 ---
 
 ## Planned Features (roadmap)

@@ -15,6 +15,7 @@ pub struct Converter {
     pub func_crypto_stats: Vec<(String, usize, usize, usize, usize, usize, usize)>,
     pub func_store_ops: HashMap<String, Vec<(String, String, u32, String, usize)>>,
     pub func_stores_from_common_addrs: HashMap<String, HashMap<String, Vec<(u32, String, String)>>>,
+    pub func_xor_stores: HashMap<String, Vec<[String; 4]>>,
     stack: Vec<DataType>,
     control_stack: Vec<(String, usize, usize, usize, usize, Vec<DataType>)>,
     label_ctr: usize,
@@ -32,6 +33,7 @@ impl Converter {
             func_crypto_stats: Vec::new(),
             func_store_ops: HashMap::new(),
             func_stores_from_common_addrs: HashMap::new(),
+            func_xor_stores: HashMap::new(),
             stack: Vec::new(),
             control_stack: Vec::new(),
             label_ctr: 0,
@@ -309,6 +311,8 @@ impl Converter {
             let mut current_func_calls = Vec::new();
             let mut current_func_store_ops = Vec::new();
             let mut current_func_stores_from_common_addrs = HashMap::new();
+            let mut current_xor_stores = Vec::new();
+            let mut xor_last_op = 0;
             
             // Store i32 and i64 consts we locate seperately, we'll merge these in order 64->32 
             // and track a ptr, For where i64 ends, allowing us to easily parse 32 vs. 64 byte words.
@@ -321,6 +325,14 @@ impl Converter {
             while reader.addr < end_addr {
                 let opcode = reader.read_byte().unwrap_or(0);
                 ops_count += 1;
+
+                // xor_last_op works on an increment system. Base is when it is at 0. When a xor op is detected, it becomes one.
+                // We need to let the end of this iteration finish though, before marking it as xor about to not be the last op.
+                // So we wait until it comes back to this start of the loop, and then increment it to two. If it is two at the end,
+                // Then we set it back to 0.
+                if xor_last_op == 1 {
+                    xor_last_op = 2;
+                }
 
                 match opcode {
                     NOP => {
@@ -891,6 +903,7 @@ impl Converter {
                     I32_XOR => { 
                         computation_ops_count += 1;
                         xor_ops_count += 1;
+                        xor_last_op = 1;
                         let params = self.use_stack(2); 
                         self.stack.push(params[0].combine_data(&params[1], "^", "(({0}) ^ ({1}))", &mut i32_consts, &mut i64_consts));
                     }
@@ -1031,6 +1044,7 @@ impl Converter {
                     I64_XOR => {
                         computation_ops_count += 1;
                         xor_ops_count += 1;
+                        xor_last_op = 1;
                         let params = self.use_stack(2); 
                         self.stack.push(params[0].combine_data(&params[1], "^", "(({0}) ^ ({1}))", &mut i32_consts, &mut i64_consts));
                     }
@@ -1461,6 +1475,10 @@ impl Converter {
                         current_func_store_ops.push(("i32.store".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "i32".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i32.store".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     I64_STORE => {
                         store_ops_count += 1;
@@ -1474,6 +1492,10 @@ impl Converter {
                         current_func_store_ops.push(("i64.store".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "i64".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i64.store".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     F32_STORE => {
                         store_ops_count += 1;
@@ -1513,6 +1535,10 @@ impl Converter {
                         current_func_store_ops.push(("i32.store8".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "u8".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i32.store8".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     I32_STORE16 => {
                         store_ops_count += 1;
@@ -1526,6 +1552,10 @@ impl Converter {
                         current_func_store_ops.push(("i32.store16".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "u16".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i32.store16".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     I64_STORE8 => {
                         store_ops_count += 1;
@@ -1539,6 +1569,10 @@ impl Converter {
                         current_func_store_ops.push(("i64.store8".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "u8".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i64.store8".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     I64_STORE16 => {
                         store_ops_count += 1;
@@ -1552,6 +1586,10 @@ impl Converter {
                         current_func_store_ops.push(("i64.store16".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "u16".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i64.store16".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     I64_STORE32 => {
                         store_ops_count += 1;
@@ -1565,6 +1603,10 @@ impl Converter {
                         current_func_store_ops.push(("i64.store32".to_string(), params[0].to_string(), offset, params[1].to_string(), current_func_is_in_loop));
                         let common_addrs = current_func_stores_from_common_addrs.entry(params[0].to_string()).or_insert(Vec::new());
                         common_addrs.push((offset, params[1].to_string(), "u32".to_string()));
+
+                        if xor_last_op == 2 {
+                            current_xor_stores.push(["i64.store32".to_string(), params[0].to_string(), offset.to_string(), params[1].to_string()]);
+                        }
                     }
                     PREFIX_FC => {
                         let sub_opcode = reader.read_u32().unwrap_or(0);
@@ -1632,12 +1674,17 @@ impl Converter {
                         panic!("Unhandled opcode: {:#04x}.", opcode);
                     }
                 }
+                // If xor_last_op = 2, then we reset to 0. It is no longer the last operation.
+                if xor_last_op == 2 {
+                    xor_last_op = 0;
+                }
             }
 
             // Push collected current func data for other features into our struct.
             self.func_calls.insert(func_name.clone(), current_func_calls);
             self.func_store_ops.insert(func_name.clone(), current_func_store_ops);
             self.func_stores_from_common_addrs.insert(func_name.clone(), current_func_stores_from_common_addrs);
+            self.func_xor_stores.insert(func_name.clone(), current_xor_stores);
 
             // Push all collected ops into func_crypto_stats.
             self.func_crypto_stats.push((

@@ -10,6 +10,7 @@ use WasmCrack::wasmcrack::call_data::call_data::CallData;
 use WasmCrack::wasmcrack::crypto_heuristic_analyzer::crypto_heuristic_analyzer::CryptoHeuristicAnalyzer;
 use WasmCrack::wasmcrack::store_ops_data::store_ops_data::StoreOpsData;
 use WasmCrack::wasmcrack::struct_solver::struct_solver::StructSolver;
+use WasmCrack::wasmcrack::xor_stores::xor_stores::XorStores;
 
 fn main() { 
     // Initialize args and bypass initial exe dir
@@ -97,6 +98,13 @@ fn main() {
         let struct_solver_data_path = project_dir.clone() + "/potential-structs.txt";
         fs::write(&struct_solver_data_path, &struct_solver_data_output).unwrap_or_else(|_| {
             panic!("Failed to write to {}", struct_solver_data_path);
+        });
+
+        println!("Executing direct xor stores identifier...");
+        let xor_stores_output = XorStores::parse_stores(&wasm2js_engine.func_xor_stores);
+        let xor_stores_path = project_dir.clone() + "/xor-stores.txt";
+        fs::write(&xor_stores_path, &xor_stores_output).unwrap_or_else(|_| {
+            panic!("Failed to write to {}", xor_stores_path);
         });
 
         println!("\nAll tools successfully executed.\n\n");
